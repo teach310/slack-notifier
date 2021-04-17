@@ -32,13 +32,15 @@ const doPost = (event) => {
 // イベントとPayloadの一覧　https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#issue_comment
 const getGitHubEvent = (eventData) => {
   if ('issue' in eventData && 'comment' in eventData) {
+    if ('pull_request' in eventData.issue) {
+      return 'pull_request_comment';
+    }
     return 'issue_comment';
   }else if('pull_request' in eventData && 'review' in eventData){
     return 'pull_request_review'
   }else if('pull_request' in eventData && 'comment' in eventData){
     return 'pull_request_review_comment'
   }
-  // TODO pull_request_comment追加
   
   return 'unknown_event';
 }
@@ -62,6 +64,8 @@ const handleGitHubEvent = (sheetReader, githubEvent, eventData) => {
     case 'issue_comment':
       handleIssueComment(sheetReader, eventData);
       return;
+    case 'pull_request_comment':
+      return; // scheduled_reminderとの通知と被る。GitHub側で通知のOn・Off制御ができないため、GAS側で弾く。
     case 'pull_request_review':
       handlePullRequestReview(sheetReader, eventData);
       return;
